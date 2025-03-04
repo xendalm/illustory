@@ -8,11 +8,14 @@ def display_page_text(pdf_text, page_number):
     st.write(pdf_text[page_number])
 
 
-pdf_path = "data/with.pdf"
-pdf_text = extract_text_and_images(pdf_path)
-num_pages = len(pdf_text)
+if 'extracted_content' not in st.session_state:
+    pdf_path = "data/with.pdf"
+    pdf_text = st.session_state['extracted_content'] = extract_text_and_images(pdf_path)
+else:
+    pdf_text = st.session_state['extracted_content']
 
 if pdf_text:
+    num_pages = len(pdf_text)
     page_number = st.sidebar.number_input("Номер страницы", min_value=1, max_value=num_pages, value=1, step=1) - 1
 
     display_page_text(pdf_text, page_number)
