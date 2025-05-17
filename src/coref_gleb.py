@@ -16,7 +16,13 @@ SIMILARITY_THRESHOLD = 0.94
 
 tokenizer = SpacyTokenizer()
 embed_model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
-russian_stopwords = set(stopwords.words("russian"))
+russian_stopwords = set(stopwords.words("russian")) | {'оно', 'такой', 'это', 'наш', 'кто', 'такое', 'тот', 'каждый',
+                                                       'она', 'некоторые', 'сей', 'так', 'здесь', 'всем', 'всех',
+                                                       'этого', 'вы', 'твой', 'все', 'его', 'такие', 'та', 'этот', 'мы',
+                                                       'того', 'такая', 'её', 'ваш', 'те', 'какой', 'чей', 'их', 'сюда',
+                                                       'они', 'всеми', 'я', 'ты', 'эти', 'там', 'мой', 'который', 'что',
+                                                       'вся', 'туда', 'некоторый', 'он', 'чьё'}
+
 morph = pymorphy2.MorphAnalyzer()
 punct = set(string.punctuation)
 
