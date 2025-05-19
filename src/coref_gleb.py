@@ -120,17 +120,18 @@ def get_cluster_embedding(cluster_mentions):
         return None
     unique_mentions, counts = np.unique(cleaned, return_counts=True)
     embeddings = embed_model.encode(unique_mentions)
-    return np.average(embeddings, axis=0, weights=counts)
+    return np.average(embeddings, axis=0, weights=counts), np.sum(counts)
 
 
 def merge_clusters_by_embeddings(clusters, threshold=SIMILARITY_THRESHOLD):
     merged, embeddings = [], []
 
     for cluster in clusters:
-        cur_emb = get_cluster_embedding(cluster['mentions'])
-        cur_num = len(cluster['mentions'])
-        if cur_emb is None:
+        res = get_cluster_embedding(cluster)
+        if res is None:
             continue
+        cur_emb, cur_num = res
+
         for i, (emb, num) in enumerate(embeddings):
             if util.cos_sim(cur_emb, emb).item() > threshold:
                 merged[i]['mentions'].extend(cluster['mentions'])
