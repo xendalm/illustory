@@ -1,0 +1,3 @@
+[submodule "long-corpipe"]
+	path = long-corpipe
+	url = https://github.com/GorbatovNik/long-corpipe
