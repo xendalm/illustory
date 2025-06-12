@@ -3,7 +3,6 @@ import json
 import os
 from collections import defaultdict, Counter
 from types import SimpleNamespace
-
 import pymorphy2
 import requests
 import tensorflow as tf
@@ -13,6 +12,8 @@ from LongCorpipe import corpipe24 as cor
 from LongCorpipe.clusterer import merge_clusters
 from datasets import load_dataset
 from natasha import Segmenter, NewsEmbedding, NewsSyntaxParser, NewsMorphTagger, Doc
+
+
 
 # --- Глобальные конфигурации и инициализация ---
 
@@ -38,10 +39,8 @@ tf.config.experimental.set_memory_growth(gpu, True)
 tf.config.threading.set_inter_op_parallelism_threads(CORPIPE_ARGS.threads)
 corpipe_tokenizer = transformers.AutoTokenizer.from_pretrained(CORPIPE_ARGS.encoder)
 corpipe_tokenizer.add_special_tokens({"additional_special_tokens": [cor.Dataset.TOKEN_EMPTY] +
-                                                                   [cor.Dataset.TOKEN_TREEBANK.format(i) for i in
-                                                                    range(21)] +
-                                                                   ([
-                                                                        cor.Dataset.TOKEN_CLS] if corpipe_tokenizer.cls_token_id is None else [])})
+                                    [cor.Dataset.TOKEN_TREEBANK.format(i) for i in range(21)] +
+                                    ([cor.Dataset.TOKEN_CLS] if corpipe_tokenizer.cls_token_id is None else [])})
 
 with open(os.path.join(CORPIPE_ARGS.load, "tags.txt"), mode="r") as tags_file:
     corpipe_tags = [line.rstrip("\r\n") for line in tags_file]
@@ -63,33 +62,32 @@ morph_tagger = NewsMorphTagger(embedding)
 
 # Настройки для Natasha и грамматических правил
 BAD_TAGS = {
-    'ADP',  # предлог (адпозиция)
+    'ADP',    # предлог (адпозиция)
     'CCONJ',  # сочинительный союз
-    'DET',  # определитель (указательное/притяжательное местоимение)
-    'INTJ',  # междометие
-    'PART',  # частица
-    'PRON',  # местоимение
+    'DET',    # определитель (указательное/притяжательное местоимение)
+    'INTJ',   # междометие
+    'PART',   # частица
+    'PRON',   # местоимение
     'PUNCT',  # знак препинания
     'SCONJ',  # подчинительный союз
-    'SYM',  # символ (валюта, знак, спецсимвол)
+    'SYM',    # символ (валюта, знак, спецсимвол)
 }
 MAIN_TAGS = {
     "PROPN",  # имя собственное
-    "NOUN",  # существительное
+    "NOUN",   # существительное
 }
 GRAMMEME_MAP = {
-    'Nom': 'nomn',  # именительный
-    'Gen': 'gent',  # родительный
-    'Dat': 'datv',  # дательный
-    'Acc': 'accs',  # винительный
-    'Ins': 'ablt',  # творительный
-    'Loc': 'loct',  # предложный
+    'Nom': 'nomn',   # именительный
+    'Gen': 'gent',   # родительный
+    'Dat': 'datv',   # дательный
+    'Acc': 'accs',   # винительный
+    'Ins': 'ablt',   # творительный
+    'Loc': 'loct',   # предложный
     'Sing': 'sing',  # единственное число
     'Plur': 'plur',  # множественное число
-    'Pos': 'Poss',  # притяжательность (Poss=Yes)
+    'Pos': 'Poss',   # притяжательность (Poss=Yes)
 }
 ALLOWED_KEYS = {'Case', 'Number'}
-
 
 # --- Вспомогательные функции ---
 
@@ -215,8 +213,8 @@ def should_replace(mention_info, normalized_mention, cluster_repr):
     if all(t in BAD_TAGS for t in POS_tags):
         return True
 
-    if not contains_main_pos(POS_tags):
-        return False
+    if contains_main_pos(POS_tags):
+        return True
 
     return False
 
@@ -254,8 +252,7 @@ def lqca_pipeline(dataset_name, dataset_subset, context_field, output_dir):
             print(f"Ошибка при преобразовании в CoNLL-U: {e}. Возвращаем исходный элемент.")
             if os.path.exists(temp_conllu_path):
                 os.remove(temp_conllu_path)
-            return {**item, 'original_context': original_context, 'enriched_context': original_context,
-                    'replacements_made': 0}
+            return {**item, 'original_context': original_context, 'enriched_context': original_context, 'replacements_made': 0}
 
         # 2. Разрешение кореференций с помощью Corpipe
         try:
@@ -277,8 +274,7 @@ def lqca_pipeline(dataset_name, dataset_subset, context_field, output_dir):
                         local_results[mention.sent_id].append(mention)
                 cluster_add += len(clusters)
                 for i in range(len(local_results)):
-                    local_results[i] = sorted(local_results[i],
-                                              key=lambda x: (x.begin, -getattr(x, 'is_zero', False), -x.end))
+                    local_results[i] = sorted(local_results[i], key=lambda x: (x.begin, -getattr(x, 'is_zero', False), -x.end))
                 corpiped_mentions[doc_i] = local_results
             print("Кореференции разрешены.")
 
@@ -286,8 +282,7 @@ def lqca_pipeline(dataset_name, dataset_subset, context_field, output_dir):
             print(f"Ошибка при разрешении кореференций с Corpipe: {e}. Возвращаем исходный элемент.")
             if os.path.exists(temp_conllu_path):
                 os.remove(temp_conllu_path)
-            return {**item, 'original_context': original_context, 'enriched_context': original_context,
-                    'replacements_made': 0}
+            return {**item, 'original_context': original_context, 'enriched_context': original_context, 'replacements_made': 0}
         finally:
             # Удаляем временный CoNLL-U файл
             if os.path.exists(temp_conllu_path):
@@ -295,9 +290,8 @@ def lqca_pipeline(dataset_name, dataset_subset, context_field, output_dir):
 
         if not corpiped_mentions:
             print("Corpipe не вернул упоминаний для данного документа. Возвращаем исходный контекст.")
-            return {**item, 'original_context': original_context, 'enriched_context': original_context,
-                    'replacements_made': 0}
-
+            return {**item, 'original_context': original_context, 'enriched_context': original_context, 'replacements_made': 0}
+        
         # Обработка только первого документа, так как dataset_item - это один контекст
         doc_mentions = corpiped_mentions[0]  # Берем первый (и единственный) документ
 
@@ -328,8 +322,7 @@ def lqca_pipeline(dataset_name, dataset_subset, context_field, output_dir):
                 clusters_repr[cluster_id] = Counter(cluster_candidates).most_common(1)[0][0]
 
         # Шаг 3.2: Замена в предложениях
-        enriched_sentences_tokens = [list(sent) for sent in
-                                     all_sentences_tokens]  # Копируем, чтобы не изменять оригинал
+        enriched_sentences_tokens = [list(sent) for sent in all_sentences_tokens] # Копируем, чтобы не изменять оригинал
 
         # ключ - ID кластера, значение - set с нормализованными формами, которые уже встретились.
         seen_normalized_mentions_in_cluster = defaultdict(set)
@@ -382,8 +375,7 @@ def lqca_pipeline(dataset_name, dataset_subset, context_field, output_dir):
                 )
 
         enriched_context = " ".join([" ".join(s) for s in enriched_sentences_tokens])
-        dct = {**item, 'original_context': original_context, 'enriched_context': enriched_context,
-               'replacements_made': replacements_count}
+        dct = {**item, 'original_context': original_context, 'enriched_context': enriched_context, 'replacements_made': replacements_count}
         with open(f"{output_dir}/current.jsonl", "a", encoding="utf-8") as f:
             json.dump(dct, f, ensure_ascii=False)
             f.write('\n')
@@ -413,7 +405,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset_subset",
         type=str,
-        default="long_context_multiq",
+        default="ru_babilong_qa5",
         help="Подмножество датасета для использования (например, 'ru_babilong_qa5')."
     )
     parser.add_argument(
