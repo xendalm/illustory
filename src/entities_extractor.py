@@ -2,7 +2,7 @@ import json
 import os
 
 
-def load_characters_data(filepath: str) -> dict:
+def load_entities_data(filepath: str) -> dict:
     """
     Загружает JSON-данные из файла.
 
@@ -23,18 +23,19 @@ def load_characters_data(filepath: str) -> dict:
         print(f"Ошибка: Некорректный формат JSON в файле {filepath}")
         return {}
 
-def extract_characters_info(data: dict) -> list[dict]:
+
+def extract_entities_info(data: dict) -> list[dict]:
     """
-    Извлекает и агрегирует информацию о персонажах из загруженных JSON-данных.
+    Извлекает и агрегирует информацию о сущностях из загруженных JSON-данных.
 
     Args:
-        data: Словарь с данными из JSON-файла.
+        data (dict): Словарь, с данными из JSON-файла.
 
     Returns:
-        Список словарей, где каждый словарь представляет персонажа
-        и содержит его имя, связанный с ним текст и исходные предложения.
+        list[dict]: Список словарей, где каждый словарь представляет одну
+                    сущность и содержит ее упоминания и агрегированный контекст.
     """
-    characters_data = []
+    entities_data = []
     clusters = data.get('clusters', [])
 
     for i, cluster in enumerate(clusters):
@@ -53,7 +54,7 @@ def extract_characters_info(data: dict) -> list[dict]:
             for sentence_number, sentence_text, _ in sentences_info
         ]
 
-        characters_data.append({
+        entities_data.append({
             "cluster_id": i,
             "representative_mention": mentions[0] if mentions else f"Персонаж {i}",
             "mentions": mentions,
@@ -61,21 +62,21 @@ def extract_characters_info(data: dict) -> list[dict]:
             "source_sentences": source_sentences
         })
 
-    return characters_data
+    return entities_data
 
 
 if __name__ == '__main__':
     example_file = "output/906.json"
-    characters_data = load_characters_data(example_file)
-    extracted_characters = extract_characters_info(characters_data)
+    entities_data = load_entities_data(example_file)
+    extracted_entities = extract_entities_info(entities_data)
 
-    if extracted_characters:
-        print(f"Найдено {len(extracted_characters)} персонажей в файле {example_file}:\n")
-        for i, character in enumerate(extracted_characters):
+    if extracted_entities:
+        print(f"Найдено {len(extracted_entities)} сущностей в файле {example_file}:\n")
+        for i, entity in enumerate(extracted_entities):
             if i >= 3:
-                print(f"... и ещё {len(extracted_characters) - i} персонажей.")
+                print(f"... и ещё {len(extracted_entities) - i} сущностей.")
                 break
-            print(f"--- Персонаж: {character['representative_mention']} ---")
+            print(f"--- Сущность: {entity['representative_mention']} ---")
 
-            print(character["aggregated_text_context"][:300] + "...")
-            print("-" * (len(character["representative_mention"]) + 18) + "\n") 
+            print(entity["aggregated_text_context"][:300] + "...")
+            print("-" * (len(entity["representative_mention"]) + 18) + "\n") 
