@@ -1,4 +1,4 @@
- Illustory: An NLP Pipeline for Generating Visual Descriptions
+# Illustory: An NLP Pipeline for Generating Visual Descriptions
 
 This project proposes an NLP pipeline designed for the automatic extraction of detailed visual descriptions of entities (characters, locations) from Russian literary texts. The ultimate goal is to create prompts for text-to-image models to generate illustrations for books.
 
@@ -9,6 +9,12 @@ This project proposes an NLP pipeline designed for the automatic extraction of d
 3.  **Long-Distance Cluster Merging**: The custom `clusterer.py` module analyzes and merges clusters that refer to the same entity but were separated due to the model's context window limitations.
 4.  **Sentence Classification**: A fine-tuned `ruBert-base` model filters for sentences with visual descriptions for each entity.
 5.  **Final Description Generation**: An LLM aggregates the filtered sentences into a single, cohesive visual description.
+
+## Example
+
+Here you can see how illustory extracts all entity mentions in the text, and generates visual discriptions for text-to-image generative model.
+
+![example](images/example.jpg)
 
 ## Installation and Usage
 
