@@ -1,2 +1,14 @@
 pdfplumber~=0.11.5
 streamlit~=1.42.2
+google-generativeai~=0.8.5
+tqdm
+python-dotenv
+pandas
+torch
+scikit-learn
+transformers[torch]
+accelerate
+peft
+trl
+bitsandbytes
+datasets
